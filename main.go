@@ -25,7 +25,7 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/ontio/auto-transfer/common"
+	"github.com/ontio/avocado-transfer/common"
 	sdk "github.com/ontio/ontology-go-sdk"
 	ocommon "github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/smartcontract/service/native/ont"
