@@ -28,6 +28,7 @@ import (
 	"github.com/ontio/avocado-transfer/common"
 	sdk "github.com/ontio/ontology-go-sdk"
 	ocommon "github.com/ontio/ontology/common"
+	"github.com/ontio/ontology/core/types"
 	"github.com/ontio/ontology/smartcontract/service/native/ont"
 )
 
@@ -104,11 +105,24 @@ func main() {
 	}
 	w.Flush()
 
-	tx, err := ontSdk.Native.Ong.NewMultiTransferTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit, sts)
-	if err != nil {
-		fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
+	var tx *types.MutableTransaction
+	if common.DefConfig.Asset == "ong" {
+		tx, err = ontSdk.Native.Ong.NewMultiTransferTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit, sts)
+		if err != nil {
+			fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
+			return
+		}
+	} else if common.DefConfig.Asset == "ont" {
+		tx, err = ontSdk.Native.Ont.NewMultiTransferTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit, sts)
+		if err != nil {
+			fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
+			return
+		}
+	} else {
+		fmt.Println("asset type not supported")
 		return
 	}
+
 	err = ontSdk.SignToTransaction(tx, user)
 	if err != nil {
 		fmt.Println("ontSdk.SignToTransaction error :", err)
