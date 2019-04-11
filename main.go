@@ -118,6 +118,23 @@ func main() {
 			fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
 			return
 		}
+	} else if common.DefConfig.Asset == "oep4" {
+		contract, err := ocommon.AddressFromHexString(common.DefConfig.ContractAddress)
+		if err != nil {
+			fmt.Println("ocommon.AddressFromHexString error :", err)
+			return
+		}
+		var args []interface{}
+		for _, st := range sts {
+			args = append(args, []interface{}{st.From, st.To, st.Value})
+		}
+		params := []interface{}{"transferMulti", args}
+		tx, err = ontSdk.NeoVM.NewNeoVMInvokeTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit,
+			contract, params)
+		if err != nil {
+			fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
+			return
+		}
 	} else {
 		fmt.Println("asset type not supported")
 		return

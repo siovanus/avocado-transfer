@@ -32,8 +32,9 @@ var DefConfig = NewTestConfig()
 //Config object used by ontology-instance
 type TestConfig struct {
 	//JsonRpcAddress of ontology
-	JsonRpcAddress string
-	Asset          string
+	JsonRpcAddress  string
+	Asset           string
+	ContractAddress string
 	//Data file path
 	DataFile string
 	//WalletFile of test
