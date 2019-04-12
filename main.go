@@ -105,50 +105,60 @@ func main() {
 	}
 	w.Flush()
 
-	var tx *types.MutableTransaction
-	if common.DefConfig.Asset == "ong" {
-		tx, err = ontSdk.Native.Ong.NewMultiTransferTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit, sts)
-		if err != nil {
-			fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
+	n := (len(sts) + 499) / 500
+	for i := 0; i < n; i++ {
+		states := sts[:0]
+		if i < (n - 1) {
+			states = sts[i*500: (i+1)*500]
+		} else {
+			states = sts[i*500:]
+		}
+		fmt.Println(len(states))
+		var tx *types.MutableTransaction
+		if common.DefConfig.Asset == "ong" {
+			tx, err = ontSdk.Native.Ong.NewMultiTransferTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit, states)
+			if err != nil {
+				fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
+				return
+			}
+		} else if common.DefConfig.Asset == "ont" {
+			tx, err = ontSdk.Native.Ont.NewMultiTransferTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit, states)
+			if err != nil {
+				fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
+				return
+			}
+		} else if common.DefConfig.Asset == "oep4" {
+			contract, err := ocommon.AddressFromHexString(common.DefConfig.ContractAddress)
+			if err != nil {
+				fmt.Println("ocommon.AddressFromHexString error :", err)
+				return
+			}
+			var args []interface{}
+			for _, st := range states {
+				args = append(args, []interface{}{st.From, st.To, st.Value})
+			}
+			params := []interface{}{"transferMulti", args}
+			tx, err = ontSdk.NeoVM.NewNeoVMInvokeTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit,
+				contract, params)
+			if err != nil {
+				fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
+				return
+			}
+		} else {
+			fmt.Println("asset type not supported")
 			return
 		}
-	} else if common.DefConfig.Asset == "ont" {
-		tx, err = ontSdk.Native.Ont.NewMultiTransferTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit, sts)
-		if err != nil {
-			fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
-			return
-		}
-	} else if common.DefConfig.Asset == "oep4" {
-		contract, err := ocommon.AddressFromHexString(common.DefConfig.ContractAddress)
-		if err != nil {
-			fmt.Println("ocommon.AddressFromHexString error :", err)
-			return
-		}
-		var args []interface{}
-		for _, st := range sts {
-			args = append(args, []interface{}{st.From, st.To, st.Value})
-		}
-		params := []interface{}{"transferMulti", args}
-		tx, err = ontSdk.NeoVM.NewNeoVMInvokeTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit,
-			contract, params)
-		if err != nil {
-			fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
-			return
-		}
-	} else {
-		fmt.Println("asset type not supported")
-		return
-	}
 
-	err = ontSdk.SignToTransaction(tx, user)
-	if err != nil {
-		fmt.Println("ontSdk.SignToTransaction error :", err)
-		return
+		err = ontSdk.SignToTransaction(tx, user)
+		if err != nil {
+			fmt.Println("ontSdk.SignToTransaction error :", err)
+			return
+		}
+		txHash, err := ontSdk.SendTransaction(tx)
+		if err != nil {
+			fmt.Println("ontSdk.SendTransaction error :", err)
+			return
+		}
+		fmt.Println("tx success, txHash is :", txHash.ToHexString())
 	}
-	txHash, err := ontSdk.SendTransaction(tx)
-	if err != nil {
-		fmt.Println("ontSdk.SendTransaction error :", err)
-		return
-	}
-	fmt.Println("tx success, txHash is :", txHash.ToHexString())
 }

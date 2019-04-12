@@ -6,5 +6,5 @@
   "WalletFile":"./wallet.dat",
   "Bonus": 100,
   "GasPrice":500,
-  "GasLimit":200000
+  "GasLimit":20000000
 }
