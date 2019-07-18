@@ -92,7 +92,7 @@ func main() {
 		amount := new(big.Int).Div(new(big.Int).Mul(share, bonus), total)
 		address, err := ocommon.AddressFromBase58(record.Address)
 		if err != nil {
-			fmt.Println("ocommon.AddressFromBase58 error")
+			fmt.Println("ocommon.AddressFromBase58 error:", record.Address)
 			return
 		}
 		sts = append(sts, &ont.State{
