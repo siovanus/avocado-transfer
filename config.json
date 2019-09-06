@@ -1,10 +1,10 @@
 {
-  "JsonRpcAddress":"http://polaris1.ont.io:20336",
-  "Asset": "oep4",
-  "ContractAddress": "be7ee30f1dfa27bfd85eb1319eeb038bc18bc4e7",
+  "JsonRpcAddress":"http://polaris4.ont.io:20336",
+  "Asset": "ong",
+  "ContractAddress": "bdc9c45c6d706b54cf5772c48d43661fa7db25cd",
   "DataFile": "./input.txt",
   "WalletFile":"./wallet.dat",
-  "Bonus": 100,
+  "Bonus": 590760312058,
   "GasPrice":500,
   "GasLimit":20000000
 }

@@ -21,6 +21,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/ontio/avocado-transfer/log"
 	"io"
 	"math/big"
 	"os"
@@ -38,9 +39,10 @@ type Result struct {
 }
 
 func main() {
+	log.InitLog(1, log.PATH, log.Stdout)
 	err := common.DefConfig.Init("./config.json")
 	if err != nil {
-		fmt.Println("DefConfig.Init error:", err)
+		log.Errorf("DefConfig.Init error:%s", err)
 		return
 	}
 
@@ -56,7 +58,7 @@ func main() {
 	var sts []*ont.State
 	fi, err := os.Open(common.DefConfig.DataFile)
 	if err != nil {
-		fmt.Println("Error os.Open: ", err)
+		log.Errorf("Error os.Open: %s", err)
 		return
 	}
 	defer fi.Close()
@@ -70,7 +72,7 @@ func main() {
 		result := new(Result)
 		err := json.Unmarshal([]byte(a), result)
 		if err != nil {
-			fmt.Println("json.Unmarshal error")
+			log.Errorf("json.Unmarshal error")
 			return
 		}
 		sum = sum + result.Value
@@ -79,7 +81,7 @@ func main() {
 
 	f, err := os.Create("record.txt")
 	if err != nil {
-		fmt.Println("Error os.Create: ", err)
+		log.Errorf("Error os.Create: %s", err)
 		return
 	}
 	defer f.Close()
@@ -92,7 +94,7 @@ func main() {
 		amount := new(big.Int).Div(new(big.Int).Mul(share, bonus), total)
 		address, err := ocommon.AddressFromBase58(record.Address)
 		if err != nil {
-			fmt.Println("ocommon.AddressFromBase58 error:", record.Address)
+			log.Errorf("ocommon.AddressFromBase58 error:%s", record.Address)
 			return
 		}
 		sts = append(sts, &ont.State{
@@ -109,7 +111,7 @@ func main() {
 	for i := 0; i < n; i++ {
 		states := sts[:0]
 		if i < (n - 1) {
-			states = sts[i*500: (i+1)*500]
+			states = sts[i*500 : (i+1)*500]
 		} else {
 			states = sts[i*500:]
 		}
@@ -118,19 +120,19 @@ func main() {
 		if common.DefConfig.Asset == "ong" {
 			tx, err = ontSdk.Native.Ong.NewMultiTransferTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit, states)
 			if err != nil {
-				fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
+				log.Errorf("ontSdk.Native.Ong.NewMultiTransferTransaction error :%s", err)
 				return
 			}
 		} else if common.DefConfig.Asset == "ont" {
 			tx, err = ontSdk.Native.Ont.NewMultiTransferTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit, states)
 			if err != nil {
-				fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
+				log.Errorf("ontSdk.Native.Ong.NewMultiTransferTransaction error :%s", err)
 				return
 			}
 		} else if common.DefConfig.Asset == "oep4" {
 			contract, err := ocommon.AddressFromHexString(common.DefConfig.ContractAddress)
 			if err != nil {
-				fmt.Println("ocommon.AddressFromHexString error :", err)
+				log.Errorf("ocommon.AddressFromHexString error :%s", err)
 				return
 			}
 			var args []interface{}
@@ -141,24 +143,28 @@ func main() {
 			tx, err = ontSdk.NeoVM.NewNeoVMInvokeTransaction(common.DefConfig.GasPrice, common.DefConfig.GasLimit,
 				contract, params)
 			if err != nil {
-				fmt.Println("ontSdk.Native.Ong.NewMultiTransferTransaction error :", err)
+				log.Errorf("ontSdk.Native.Ong.NewMultiTransferTransaction error :%s", err)
 				return
 			}
 		} else {
-			fmt.Println("asset type not supported")
+			log.Errorf("asset type not supported")
 			return
 		}
 
 		err = ontSdk.SignToTransaction(tx, user)
 		if err != nil {
-			fmt.Println("ontSdk.SignToTransaction error :", err)
+			log.Errorf("ontSdk.SignToTransaction error :%s", err)
 			return
 		}
-		txHash, err := ontSdk.SendTransaction(tx)
-		if err != nil {
-			fmt.Println("ontSdk.SendTransaction error :", err)
-			return
+
+		for i := 0; i < 5; i++ {
+			txHash, err := ontSdk.SendTransaction(tx)
+			if err == nil {
+				log.Infof("tx success, txHash is :%s", txHash.ToHexString())
+				break
+			} else {
+				log.Errorf("retry, ontSdk.SendTransaction error :%s", err)
+			}
 		}
-		fmt.Println("tx success, txHash is :", txHash.ToHexString())
 	}
 }
